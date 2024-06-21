@@ -21,6 +21,9 @@ class MobilefacenetONNX {
 
   bool isInitialized = false;
 
+  static final inputImageList = Float32List.fromList(List.generate(
+      1 * kInputHeight * kInputWidth * 3, (_) => Random().nextDouble()));
+
   // Singleton pattern
   MobilefacenetONNX._privateConstructor();
   static final instance = MobilefacenetONNX._privateConstructor();
@@ -76,10 +79,6 @@ class MobilefacenetONNX {
     final sessionAddress = args['sessionAddress'];
     assert(sessionAddress != 0 && sessionAddress != -1);
 
-    final random = Random();
-    final randomFloats = List.generate(
-        1 * kInputHeight * kInputWidth * 3, (_) => random.nextDouble());
-    final inputImageList = Float32List.fromList(randomFloats);
     final inputShape = [
       1,
       kInputHeight,
@@ -97,6 +96,7 @@ class MobilefacenetONNX {
     try {
       final runOptions = OrtRunOptions();
       final session = OrtSession.fromAddress(sessionAddress);
+      final time = DateTime.now();
       outputs = session.run(runOptions, inputs);
       // release everything
       inputOrt.release();
@@ -104,11 +104,11 @@ class MobilefacenetONNX {
       for (final element in outputs) {
         element?.release();
       }
+      log(
+        '[$name] interpreter.run is finished, in ${DateTime.now().difference(time).inMilliseconds} ms',
+      );
     } catch (e, s) {
       log('Error while running inference: $e \n $s');
     }
-    log(
-      '[$name] interpreter.run is finished',
-    );
   }
 }

@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:developer' show log;
 
 import 'package:computer/computer.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_onnx_inference_crash/onnx/mobilefacenet_onnx.dart';
 import 'package:flutter_onnx_inference_crash/onnx/yolo_face_onnx.dart';
@@ -49,11 +48,8 @@ class _MyHomePageState extends State<MyHomePage> {
     _isRunning = true;
     try {
       log('start inference loop');
-      final computer = Computer.create();
-      await computer.turnOn(workersCount: 4);
       while (true) {
-        await YoloFaceONNX.instance.init();
-        await MobilefacenetONNX.instance.init();
+        final computer = Computer.shared();
         await computer.compute(YoloFaceONNX.predict,
             param: {"sessionAddress": YoloFaceONNX.instance.sessionAddress});
         await computer.compute(MobilefacenetONNX.predict, param: {
@@ -71,18 +67,20 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
+  Future<void> runAsync() async {
+    await YoloFaceONNX.instance.init();
+    await MobilefacenetONNX.instance.init();
+    final computer = Computer.shared();
+    await computer.turnOn(workersCount: 5);
+    unawaited(_runInfiniteIndexing());
+    unawaited(_runInfiniteIndexing());
+    unawaited(_runInfiniteIndexing());
+    unawaited(_runInfiniteIndexing());
+    unawaited(_runInfiniteIndexing());
+  }
+
   @override
   Widget build(BuildContext context) {
-    // try {
-    //   log('Initializing models');
-    //   await YoloFaceONNX.instance.init();
-    //   await MobilefacenetONNX.instance.init();
-    //   log('Initialization done');
-    // } catch (e, s) {
-    //   log('Error initializing models');
-    //   log(e.toString());
-    //   log(s.toString());
-    // }
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
@@ -105,7 +103,7 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          unawaited(_runInfiniteIndexing());
+          unawaited(runAsync());
         },
         tooltip: 'Start running inference',
         child: const Icon(Icons.add),

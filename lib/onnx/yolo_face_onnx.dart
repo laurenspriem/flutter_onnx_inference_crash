@@ -23,6 +23,9 @@ class YoloFaceONNX {
 
   bool isInitialized = false;
 
+  static final inputImageList = Float32List.fromList(List.generate(
+      1 * kInputHeight * kInputWidth * 3, (_) => Random().nextDouble()));
+
   // Singleton pattern
   YoloFaceONNX._privateConstructor();
   static final instance = YoloFaceONNX._privateConstructor();
@@ -80,10 +83,6 @@ class YoloFaceONNX {
     final sessionAddress = args['sessionAddress'];
     assert(sessionAddress != 0 && sessionAddress != -1);
 
-    final random = Random();
-    final randomFloats = List.generate(
-        1 * kInputHeight * kInputWidth * 3, (_) => random.nextDouble());
-    final inputImageList = Float32List.fromList(randomFloats);
     final inputShape = [
       1,
       kNumChannels,
@@ -101,6 +100,7 @@ class YoloFaceONNX {
     try {
       final runOptions = OrtRunOptions();
       final session = OrtSession.fromAddress(sessionAddress);
+      final time = DateTime.now();
       outputs = session.run(runOptions, inputs);
       // release everything
       inputOrt.release();
@@ -108,11 +108,11 @@ class YoloFaceONNX {
       for (final element in outputs) {
         element?.release();
       }
+      log(
+        '[$name] interpreter.run is finished, in ${DateTime.now().difference(time).inMilliseconds} ms',
+      );
     } catch (e, s) {
       log('Error while running inference: $e \n $s');
     }
-    log(
-      '[$name] interpreter.run is finished',
-    );
   }
 }
