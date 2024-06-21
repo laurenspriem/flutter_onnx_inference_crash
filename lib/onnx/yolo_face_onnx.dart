@@ -76,7 +76,8 @@ class YoloFaceONNX {
     return;
   }
 
-  static Future<void> predict(int sessionAddress) async {
+  static Future<void> predict(Map args) async {
+    final sessionAddress = args['sessionAddress'];
     assert(sessionAddress != 0 && sessionAddress != -1);
 
     final random = Random();

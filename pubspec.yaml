@@ -17,6 +17,7 @@ dependencies:
       ref: ente_onnxruntime
 
   cupertino_icons: ^1.0.6
+  computer: ^3.2.1
 
 dev_dependencies:
   flutter_test:

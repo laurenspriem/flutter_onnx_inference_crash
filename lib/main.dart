@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:developer' show log;
 
+import 'package:computer/computer.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_onnx_inference_crash/onnx/mobilefacenet_onnx.dart';
@@ -48,16 +49,20 @@ class _MyHomePageState extends State<MyHomePage> {
     _isRunning = true;
     try {
       log('start inference loop');
+      final computer = Computer.create();
+      await computer.turnOn(workersCount: 4);
       while (true) {
         await YoloFaceONNX.instance.init();
         await MobilefacenetONNX.instance.init();
-        await compute(
-            YoloFaceONNX.predict, YoloFaceONNX.instance.sessionAddress);
-        await compute(MobilefacenetONNX.predict,
-            MobilefacenetONNX.instance.sessionAddress);
-        setState(() {
-          _counter++;
+        await computer.compute(YoloFaceONNX.predict,
+            param: {"sessionAddress": YoloFaceONNX.instance.sessionAddress});
+        await computer.compute(MobilefacenetONNX.predict, param: {
+          "sessionAddress": MobilefacenetONNX.instance.sessionAddress
         });
+        setState(() {
+          _counter += 1;
+        });
+        log("Now at $_counter");
         // Future.delayed(const Duration(milliseconds: 100));
       }
     } catch (e, s) {
