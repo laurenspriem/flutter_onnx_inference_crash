@@ -1,16 +1,12 @@
 # flutter_onnx_inference_crash
 
-A new Flutter project.
+This is an MRE for a [reported ONNX issue on Android](https://github.com/microsoft/onnxruntime/issues/21082).
 
-## Getting Started
+To reproduce the crash, simply follow these steps:
 
-This project is a starting point for a Flutter application.
+1. Connect an Android phone or emulator
+2. Run `run_app.sh` to start the app
+3. Hit the floating button in bottom right corner to start inference
+4. Wait for the app to crash (somewhere in 100 to 1000 inference runs)
 
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+If the app does not start, you might have to properly [install Flutter](https://docs.flutter.dev/get-started/install/linux/android?tab=download).
