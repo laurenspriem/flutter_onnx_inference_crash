@@ -1,17 +1,16 @@
+import 'dart:developer' show log;
 import "dart:async";
 import 'dart:math' show Random;
 import 'dart:typed_data' show ByteData, Float32List;
-import 'dart:ui' as ui show Image;
 
 import 'package:flutter/services.dart' show rootBundle;
-import 'package:logging/logging.dart';
 import 'package:onnxruntime/onnxruntime.dart';
 
 /// This class is responsible for running the face embedding model (MobileFaceNet) on ONNX runtime, and can be accessed through the singleton instance [MobilefacenetONNX.instance].
 class MobilefacenetONNX {
-  static final _logger = Logger('MobilefacenetONNX');
-
   int sessionAddress = 0;
+
+  static const name = 'MobilefacenetONNX';
 
   static const String modelPath = "assets/mobilefacenet_opset15.onnx";
 
@@ -30,9 +29,9 @@ class MobilefacenetONNX {
   /// Check if the interpreter is initialized, if not initialize it with `loadModel()`
   Future<void> init() async {
     if (!isInitialized) {
-      _logger.info('init is called');
+      log('init is called');
       sessionAddress = await _loadModel();
-      _logger.info("Face detection model loaded");
+      log("init is done, model loaded");
       if (sessionAddress != -1) {
         isInitialized = true;
       }
@@ -59,7 +58,7 @@ class MobilefacenetONNX {
           rawAssetFile.buffer.asUint8List(), sessionOptions);
       return session.address;
     } catch (e, s) {
-      _logger.severe('Face embedding model not loaded', e, s);
+      log('Face embedding model not loaded:  ${e.toString()},\n ${s.toString()}');
     }
     return -1;
   }
@@ -83,15 +82,15 @@ class MobilefacenetONNX {
     final inputImageList = Float32List.fromList(randomFloats);
     final inputShape = [
       1,
-      kNumChannels,
       kInputHeight,
       kInputWidth,
+      kNumChannels,
     ];
     final inputOrt = OrtValueTensor.createTensorWithDataList(
       inputImageList,
       inputShape,
     );
-    final inputs = {'input': inputOrt};
+    final inputs = {'img_inputs': inputOrt};
 
     // Run inference
     List<OrtValue?>? outputs;
@@ -106,10 +105,10 @@ class MobilefacenetONNX {
         element?.release();
       }
     } catch (e, s) {
-      _logger.severe('Error while running inference: $e \n $s');
+      log('Error while running inference: $e \n $s');
     }
-    _logger.info(
-      'interpreter.run is finished',
+    log(
+      '[$name] interpreter.run is finished',
     );
   }
 }

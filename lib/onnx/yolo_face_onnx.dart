@@ -1,17 +1,16 @@
+import 'dart:developer' show log;
 import "dart:async";
 import 'dart:math' show Random;
 import 'dart:typed_data' show ByteData, Float32List;
-import 'dart:ui' as ui show Image;
 
 import 'package:flutter/services.dart' show rootBundle;
-import 'package:logging/logging.dart';
 import 'package:onnxruntime/onnxruntime.dart';
 
 /// This class is responsible for running the face detection model (YOLOv5Face) on ONNX runtime, and can be accessed through the singleton instance [YoloFaceONNX.instance].
 class YoloFaceONNX {
-  static final _logger = Logger('YoloFaceONNX');
-
   int sessionAddress = 0;
+
+  static const name = 'YoloFaceONNX';
 
   static const String modelPath = "assets/yolov5s_face_640_640_dynamic.onnx";
 
@@ -32,9 +31,10 @@ class YoloFaceONNX {
   /// Check if the interpreter is initialized, if not initialize it with `loadModel()`
   Future<void> init() async {
     if (!isInitialized) {
-      _logger.info('init is called');
+      log('init is called');
+      OrtEnv.instance.init();
       sessionAddress = await _loadModel();
-      _logger.info("Face detection model loaded");
+      log("init is done, model loaded");
       if (sessionAddress != -1) {
         isInitialized = true;
       }
@@ -57,11 +57,12 @@ class YoloFaceONNX {
       ..setSessionGraphOptimizationLevel(GraphOptimizationLevel.ortEnableAll);
     try {
       final ByteData rawAssetFile = await rootBundle.load(modelPath);
+      log('asset loaded');
       final session = OrtSession.fromBuffer(
           rawAssetFile.buffer.asUint8List(), sessionOptions);
       return session.address;
     } catch (e, s) {
-      _logger.severe('Face embedding model not loaded', e, s);
+      log('Face embedding model not loaded:  ${e.toString()},\n ${s.toString()}');
     }
     return -1;
   }
@@ -108,10 +109,10 @@ class YoloFaceONNX {
         element?.release();
       }
     } catch (e, s) {
-      _logger.severe('Error while running inference: $e \n $s');
+      log('Error while running inference: $e \n $s');
     }
-    _logger.info(
-      'interpreter.run is finished',
+    log(
+      '[$name] interpreter.run is finished',
     );
   }
 }

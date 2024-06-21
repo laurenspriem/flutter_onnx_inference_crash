@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:developer' show log;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_onnx_inference_crash/onnx/mobilefacenet_onnx.dart';
 import 'package:flutter_onnx_inference_crash/onnx/yolo_face_onnx.dart';
@@ -36,24 +39,41 @@ class _MyHomePageState extends State<MyHomePage> {
 
   bool _isRunning = false;
 
-  void _runInfiniteIndexing() {
+  Future<void> _runInfiniteIndexing() async {
+    log("_runInfiniteIndexing called");
     if (_isRunning) {
       return;
     }
     _isRunning = true;
-    while (true) {
-      YoloFaceONNX.instance.predict();
-      MobilefacenetONNX.instance.predict();
-      setState(() {
-        _counter++;
-      });
+    try {
+      log('start inference loop');
+      while (true) {
+        await YoloFaceONNX.instance.init();
+        await MobilefacenetONNX.instance.init();
+        await YoloFaceONNX.instance.predict();
+        await MobilefacenetONNX.instance.predict();
+        setState(() {
+          _counter++;
+        });
+      }
+    } catch (e, s) {
+      log(e.toString());
+      log(s.toString());
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    YoloFaceONNX.instance.init();
-    MobilefacenetONNX.instance.init();
+    // try {
+    //   log('Initializing models');
+    //   await YoloFaceONNX.instance.init();
+    //   await MobilefacenetONNX.instance.init();
+    //   log('Initialization done');
+    // } catch (e, s) {
+    //   log('Error initializing models');
+    //   log(e.toString());
+    //   log(s.toString());
+    // }
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
@@ -69,6 +89,7 @@ class _MyHomePageState extends State<MyHomePage> {
             Text(
               '$_counter',
               style: Theme.of(context).textTheme.headlineMedium,
+              key: ValueKey(_counter),
             ),
           ],
         ),
