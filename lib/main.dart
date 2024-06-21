@@ -40,26 +40,22 @@ class _MyHomePageState extends State<MyHomePage> {
 
   bool _isRunning = false;
 
-  Future<void> _runInfiniteIndexing() async {
+  Future<void> _runInfiniteIndexing(int addressIndex) async {
     log("_runInfiniteIndexing called");
-    if (_isRunning) {
-      return;
-    }
-    _isRunning = true;
     try {
       log('start inference loop');
       while (true) {
         final computer = Computer.shared();
-        await computer.compute(YoloFaceONNX.predict,
-            param: {"sessionAddress": YoloFaceONNX.instance.sessionAddress});
+        await computer.compute(YoloFaceONNX.predict, param: {
+          "sessionAddress": YoloFaceONNX.instance.sessionAddresses[addressIndex]
+        });
         await computer.compute(MobilefacenetONNX.predict, param: {
-          "sessionAddress": MobilefacenetONNX.instance.sessionAddress
+          "sessionAddress":
+              MobilefacenetONNX.instance.sessionAddresses[addressIndex]
         });
         setState(() {
           _counter += 1;
         });
-        log("Now at $_counter");
-        // Future.delayed(const Duration(milliseconds: 100));
       }
     } catch (e, s) {
       log(e.toString());
@@ -68,15 +64,17 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> runAsync() async {
+    if (_isRunning) {
+      return;
+    }
+    _isRunning = true;
     await YoloFaceONNX.instance.init();
     await MobilefacenetONNX.instance.init();
     final computer = Computer.shared();
     await computer.turnOn(workersCount: 5);
-    unawaited(_runInfiniteIndexing());
-    unawaited(_runInfiniteIndexing());
-    unawaited(_runInfiniteIndexing());
-    unawaited(_runInfiniteIndexing());
-    unawaited(_runInfiniteIndexing());
+    for (int i = 0; i < 5; i++) {
+      unawaited(_runInfiniteIndexing(i));
+    }
   }
 
   @override

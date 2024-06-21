@@ -8,7 +8,7 @@ import 'package:onnxruntime/onnxruntime.dart';
 
 /// This class is responsible for running the face embedding model (MobileFaceNet) on ONNX runtime, and can be accessed through the singleton instance [MobilefacenetONNX.instance].
 class MobilefacenetONNX {
-  int sessionAddress = 0;
+  List<int> sessionAddresses = [0, 0, 0, 0, 0];
 
   static const name = 'MobilefacenetONNX';
 
@@ -33,9 +33,12 @@ class MobilefacenetONNX {
   Future<void> init() async {
     if (!isInitialized) {
       log('init is called');
-      sessionAddress = await _loadModel();
+      OrtEnv.instance.init();
+      for (int i = 0; i < sessionAddresses.length; i++) {
+        sessionAddresses[i] = await _loadModel();
+      }
       log("init is done, model loaded");
-      if (sessionAddress != -1) {
+      if (sessionAddresses.every((address) => address != -1)) {
         isInitialized = true;
       }
     }
@@ -43,9 +46,11 @@ class MobilefacenetONNX {
 
   Future<void> release() async {
     if (isInitialized) {
-      await _releaseModel();
+      for (int i = 0; i < sessionAddresses.length; i++) {
+        await _releaseModel(sessionAddresses[i]);
+        sessionAddresses[i] = 0;
+      }
       isInitialized = false;
-      sessionAddress = 0;
     }
   }
 
@@ -66,8 +71,8 @@ class MobilefacenetONNX {
     return -1;
   }
 
-  Future<void> _releaseModel() async {
-    if (sessionAddress == 0) {
+  Future<void> _releaseModel(int sessionAddress) async {
+    if (sessionAddress == 0 || sessionAddress == -1) {
       return;
     }
     final session = OrtSession.fromAddress(sessionAddress);

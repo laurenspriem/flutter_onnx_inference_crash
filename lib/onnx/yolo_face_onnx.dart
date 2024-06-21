@@ -8,7 +8,7 @@ import 'package:onnxruntime/onnxruntime.dart';
 
 /// This class is responsible for running the face detection model (YOLOv5Face) on ONNX runtime, and can be accessed through the singleton instance [YoloFaceONNX.instance].
 class YoloFaceONNX {
-  int sessionAddress = 0;
+  List<int> sessionAddresses = [0, 0, 0, 0, 0];
 
   static const name = 'YoloFaceONNX';
 
@@ -36,9 +36,11 @@ class YoloFaceONNX {
     if (!isInitialized) {
       log('init is called');
       OrtEnv.instance.init();
-      sessionAddress = await _loadModel();
+      for (int i = 0; i < sessionAddresses.length; i++) {
+        sessionAddresses[i] = await _loadModel();
+      }
       log("init is done, model loaded");
-      if (sessionAddress != -1) {
+      if (sessionAddresses.every((address) => address != -1)) {
         isInitialized = true;
       }
     }
@@ -46,9 +48,11 @@ class YoloFaceONNX {
 
   Future<void> release() async {
     if (isInitialized) {
-      await _releaseModel();
+      for (int i = 0; i < sessionAddresses.length; i++) {
+        await _releaseModel(sessionAddresses[i]);
+        sessionAddresses[i] = 0;
+      }
       isInitialized = false;
-      sessionAddress = 0;
     }
   }
 
@@ -70,8 +74,8 @@ class YoloFaceONNX {
     return -1;
   }
 
-  Future<void> _releaseModel() async {
-    if (sessionAddress == 0) {
+  Future<void> _releaseModel(int sessionAddress) async {
+    if (sessionAddress == 0 || sessionAddress == -1) {
       return;
     }
     final session = OrtSession.fromAddress(sessionAddress);
