@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_onnx_inference_crash/onnx/mobilefacenet_onnx.dart';
+import 'package:flutter_onnx_inference_crash/onnx/yolo_face_onnx.dart';
 
 void main() {
   runApp(const MyApp());
@@ -33,10 +35,15 @@ class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
 
   bool _isRunning = false;
-  bool _shouldPause = false;
 
   void _runInfiniteIndexing() {
+    if (_isRunning) {
+      return;
+    }
+    _isRunning = true;
     while (true) {
+      YoloFaceONNX.instance.predict();
+      MobilefacenetONNX.instance.predict();
       setState(() {
         _counter++;
       });
@@ -45,6 +52,8 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    YoloFaceONNX.instance.init();
+    MobilefacenetONNX.instance.init();
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
