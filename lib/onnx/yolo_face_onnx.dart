@@ -76,8 +76,7 @@ class YoloFaceONNX {
     return;
   }
 
-  /// Detects faces in the given image data.
-  Future<void> predict() async {
+  static Future<void> predict(int sessionAddress) async {
     assert(sessionAddress != 0 && sessionAddress != -1);
 
     final random = Random();

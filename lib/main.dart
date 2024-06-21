@@ -1,11 +1,12 @@
 import 'dart:async';
 import 'dart:developer' show log;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_onnx_inference_crash/onnx/mobilefacenet_onnx.dart';
 import 'package:flutter_onnx_inference_crash/onnx/yolo_face_onnx.dart';
 
-void main() {
+void main() async {
   runApp(const MyApp());
 }
 
@@ -50,11 +51,14 @@ class _MyHomePageState extends State<MyHomePage> {
       while (true) {
         await YoloFaceONNX.instance.init();
         await MobilefacenetONNX.instance.init();
-        await YoloFaceONNX.instance.predict();
-        await MobilefacenetONNX.instance.predict();
+        await compute(
+            YoloFaceONNX.predict, YoloFaceONNX.instance.sessionAddress);
+        await compute(MobilefacenetONNX.predict,
+            MobilefacenetONNX.instance.sessionAddress);
         setState(() {
           _counter++;
         });
+        // Future.delayed(const Duration(milliseconds: 100));
       }
     } catch (e, s) {
       log(e.toString());
@@ -95,7 +99,9 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _runInfiniteIndexing,
+        onPressed: () {
+          unawaited(_runInfiniteIndexing());
+        },
         tooltip: 'Start running inference',
         child: const Icon(Icons.add),
       ),
