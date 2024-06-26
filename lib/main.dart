@@ -37,6 +37,10 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
+  int _round = 0;
+  final Duration _duration = const Duration(minutes: 4);
+
+  bool _cooldown = false;
 
   bool _isRunning = false;
 
@@ -45,6 +49,17 @@ class _MyHomePageState extends State<MyHomePage> {
     try {
       log('start inference loop');
       while (true) {
+        if (_cooldown) {
+          await Future.delayed(_duration);
+        }
+        if (_counter > 100) {
+          _cooldown = true;
+          log('Starting ML cooldown');
+          await Future.delayed(_duration);
+          _counter = 0;
+          _round += 1;
+          _cooldown = false;
+        }
         final computer = Computer.shared();
         await computer.compute(YoloFaceONNX.predict, param: {
           "sessionAddress": YoloFaceONNX.instance.sessionAddresses[addressIndex]
@@ -79,6 +94,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    unawaited(runAsync());
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
@@ -96,16 +112,21 @@ class _MyHomePageState extends State<MyHomePage> {
               style: Theme.of(context).textTheme.headlineMedium,
               key: ValueKey(_counter),
             ),
+            Text(
+              'round: $_round',
+              style: Theme.of(context).textTheme.headlineMedium,
+              key: ValueKey("_round $_round"),
+            ),
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          unawaited(runAsync());
-        },
-        tooltip: 'Start running inference',
-        child: const Icon(Icons.add),
-      ),
+      // floatingActionButton: FloatingActionButton(
+      //   onPressed: () {
+      //     unawaited(runAsync());
+      //   },
+      //   tooltip: 'Start running inference',
+      //   child: const Icon(Icons.add),
+      // ),
     );
   }
 }
